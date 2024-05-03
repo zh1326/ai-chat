@@ -10,11 +10,13 @@ import {
   useChatDetailApi,
   useChatEditNameApi,
   useChatListApi,
+  useConversationsLikeApi,
   useNewChatApi
 } from '@/api/chat'
 import { useSceneListApi } from '@/api/scene'
 import type { ChatItem, ChatRouteQuery } from '@/interface/chat'
 import type { SceneItem } from '@/interface/scene'
+import { ElMessage } from 'element-plus'
 
 const globalStore = useGlobalStore()
 const { query } = useRoute()
@@ -102,6 +104,20 @@ const getNewChat = async (sceneId: number) => {
   }
 }
 
+const ratingConversation = async (convId: number, like: boolean) => {
+  if (curSession.value?.session_id) {
+    const data = {
+      sessionId: curSession.value?.session_id,
+      convId: convId,
+      like: like
+    }
+    const res = await useConversationsLikeApi(data)
+    if (res) {
+      ElMessage.success('评价成功')
+    }
+  }
+}
+
 const initWindow = () => {
   if (window.innerWidth <= 768) {
     globalStore.setIsMobile(true)
@@ -165,6 +181,7 @@ onUnmounted(() => {
             :curSessionId="curSessionId"
             :queryChatDetail="queryChatDetail"
             :getNewChat="getNewChat"
+            :ratingConversation="ratingConversation"
             :sceneList="sceneList"
           />
         </el-main>

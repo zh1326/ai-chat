@@ -30,4 +30,18 @@ export const useNewChatApi = (sceneId: number) => {
   return service.post<null, NewChatRes>(`/api/chats/${sceneId}`)
 }
 
-export const useChatSearch = (q: string) => {}
+export const useConversationsLikeApi = ({
+  sessionId,
+  convId,
+  like
+}: {
+  sessionId: string
+  convId: number
+  like: boolean
+}) => {
+  const data = { like }
+  return service.put<{ name: string }, string>(
+    `/api/chats/${sessionId}/conversations/${convId}/`,
+    data
+  )
+}

@@ -145,5 +145,16 @@ export default defineMock([
         })
       )
     }
+  },
+  {
+    url: '/api/chats/:sessionId/conversations/:convId/',
+    method: 'PUT',
+    response(req, res, next) {
+      const { params, body } = req
+      const sessionId = params.sessionId
+      const convId = params.convId
+
+      res.end(JSON.stringify('success'))
+    }
   }
 ])

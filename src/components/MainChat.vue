@@ -30,6 +30,7 @@ const props = defineProps<{
   sceneList?: SceneItem[]
   getNewChat: (sceneId: number) => void
   queryChatDetail: (id: string) => Promise<ChatItem>
+  ratingConversation: (convId: number, like: boolean) => void
 }>()
 
 const newContent = ref('')
@@ -207,8 +208,10 @@ watch(
                 v-if="chatDetail.scene_type === SceneType.GENERATION && item.role !== Role.USER"
               >
                 <div class="left-action">
-                  <div class="icon like">喜欢</div>
-                  <div class="icon dislike">不喜欢</div>
+                  <div class="icon like" @click="props.ratingConversation(item.id, true)">喜欢</div>
+                  <div class="icon dislike" @click="props.ratingConversation(item.id, false)">
+                    不喜欢
+                  </div>
                 </div>
                 <div class="right-action">
                   <div class="icon copy" @click="() => handleCopy(item.message)">
