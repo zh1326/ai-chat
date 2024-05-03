@@ -1,0 +1,16 @@
+@mixin textOverflow {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  word-break: break-all;
+}
+
+// 多行文本溢出省略号
+@mixin textOverflowMulti($line: 2) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: $line;
+  /*! autoprefixer: off */
+  -webkit-box-orient: vertical;
+}
