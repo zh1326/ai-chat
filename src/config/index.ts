@@ -1,4 +1,4 @@
 export default {
-  Title: 'chatGPT',
+  Title: '网络法精灵',
   Logo: '/static/logo.png'
 }

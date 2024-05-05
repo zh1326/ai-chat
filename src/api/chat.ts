@@ -9,25 +9,25 @@ export const useChatListApi = (q?: string) => {
     query = qs.stringify({ q })
   }
   console.log('query', query)
-  return service.get<null, ChatItem[]>(`/api/chats/?${query}`)
+  return service.get<null, ChatItem[]>(`/api/chats/sessions/?${query}`)
 }
 
 export const useChatDetailApi = (sessionId: string) => {
-  return service.get<null, ChatItem>(`/api/chats/${sessionId}/`)
+  return service.get<null, ChatItem>(`/api/chats/sessions/${sessionId}/`)
 }
 
 export const useChatDeleteApi = (sessionId: string) => {
-  return service.delete<null, string>(`/api/chats/${sessionId}/`)
+  return service.delete<null, string>(`/api/chats/sessions/${sessionId}/`)
 }
 
 export const useChatEditNameApi = (sessionId: string, name: string) => {
   const data = { name }
-  return service.put<{ name: string }, string>(`/api/chats/${sessionId}/`, data)
+  return service.patch<{ name: string }, string>(`/api/chats/sessions/${sessionId}/`, data)
 }
 
 /** 新建会话，获取 Session */
 export const useNewChatApi = (sceneId: number) => {
-  return service.post<null, NewChatRes>(`/api/chats/${sceneId}`)
+  return service.post<null, NewChatRes>(`/api/chats/${sceneId}/`)
 }
 
 export const useConversationsLikeApi = ({
@@ -41,7 +41,7 @@ export const useConversationsLikeApi = ({
 }) => {
   const data = { like }
   return service.put<{ name: string }, string>(
-    `/api/chats/${sessionId}/conversations/${convId}/`,
+    `/api/chats/sessions/${sessionId}/conversations/${convId}/`,
     data
   )
 }
