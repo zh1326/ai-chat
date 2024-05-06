@@ -38,7 +38,7 @@ export const useUserStore = defineStore('userStore', {
       const data = await useLoginApi(loginForm)
       if (data) {
         this.isLogin = true
-        this.setToken(data)
+        this.setToken(data.token)
       }
     },
     // 获取用户信息

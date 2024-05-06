@@ -6,6 +6,10 @@ export interface LoginParams {
   password: string
 }
 
+export interface LoginResp {
+  token: string
+}
+
 export interface PasswordChangeParams {
   old_password: string
   new_password: string
@@ -13,7 +17,7 @@ export interface PasswordChangeParams {
 }
 
 export const useLoginApi = (data: LoginParams) => {
-  return service.post<LoginParams, string>('/api/user/login/', data)
+  return service.post<LoginParams, LoginResp>('/api/user/login/', data)
 }
 
 export const useLogoutApi = () => {

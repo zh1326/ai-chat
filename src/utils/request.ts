@@ -20,7 +20,7 @@ service.interceptors.request.use(
     const userStore = useUserStore()
 
     if (userStore?.token && config.headers) {
-      config.headers.token = userStore.token
+      config.headers.authorization = 'Bearer  ' + userStore.token
     }
 
     // 追加时间戳，防止GET请求缓存
