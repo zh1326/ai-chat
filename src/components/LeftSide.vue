@@ -65,14 +65,14 @@ const handleDeleteClick = (e: MouseEvent, id: string) => {
       if (res) {
         ElMessage({
           type: 'success',
-          message: 'Delete completed'
+          message: '删除成功'
         })
       }
     })
     .catch(() => {
       ElMessage({
         type: 'info',
-        message: 'Delete canceled'
+        message: '删除失败'
       })
     })
 }

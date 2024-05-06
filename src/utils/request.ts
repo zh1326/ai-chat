@@ -51,7 +51,7 @@ service.interceptors.response.use(
       console.log('error')
     }
 
-    if (response.status !== 200) {
+    if (response.status !== 200 && response.status !== 204) {
       return Promise.reject(new Error(response.statusText || 'Error'))
     }
 
@@ -64,6 +64,10 @@ service.interceptors.response.use(
       return res
     }
 
+    if (response.status === 204) {
+      return res || true
+    }
+
     // 错误提示
     ElMessage.error(res.msg)
 
@@ -71,8 +75,16 @@ service.interceptors.response.use(
   },
   (error) => {
     const { response } = error
+    const curPath = router.currentRoute.value.fullPath
+
     if (response.status === 401) {
       return handleAuthorized()
+    } else if (curPath === LoginPath && response.status === 422) {
+      ElMessage.error('用户名或密码错误')
+      return
+    } else if (response.status === 422) {
+      ElMessage.error('出错了，请稍后重试')
+      return
     }
     ElMessage.error(error.message)
     return Promise.reject(error)

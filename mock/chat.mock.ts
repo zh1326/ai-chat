@@ -31,7 +31,7 @@ const list = new Array(25).fill(1).map((_, index) => {
 
 export default defineMock([
   {
-    url: '/api/chats',
+    url: '/api/chats/sessions/',
     method: 'GET',
     response(req, res, next) {
       const { query, body, params, headers } = req
@@ -47,7 +47,7 @@ export default defineMock([
     }
   },
   {
-    url: '/api/chats/:id',
+    url: '/api/chats/sessions/:id/',
     method: 'GET',
     response(req, res, next) {
       const { params } = req
@@ -58,7 +58,7 @@ export default defineMock([
     }
   },
   {
-    url: '/api/chats/:id',
+    url: '/api/chats/sessions/:id/',
     method: 'DELETE',
     response(req, res, next) {
       const { params } = req
@@ -73,8 +73,8 @@ export default defineMock([
     }
   },
   {
-    url: '/api/chats/:id',
-    method: 'PUT',
+    url: '/api/chats/sessions/:id/',
+    method: 'PATCH',
     response(req, res, next) {
       const { params, body } = req
       const id = params.id

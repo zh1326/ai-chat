@@ -22,7 +22,7 @@ export const useChatDeleteApi = (sessionId: string) => {
 
 export const useChatEditNameApi = (sessionId: string, name: string) => {
   const data = { name }
-  return service.patch<{ name: string }, string>(`/api/chats/sessions/${sessionId}/`, data)
+  return service.patch<{ name: string }, boolean>(`/api/chats/sessions/${sessionId}/`, data)
 }
 
 /** 新建会话，获取 Session */
