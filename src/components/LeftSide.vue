@@ -92,17 +92,21 @@ const handleOk = async () => {
 }
 
 const handlePasswordSubmit = async () => {
+  if (!passwordChangeForm.value.old) {
+    ElMessage.error('请输入原密码')
+    return
+  }
   if (!passwordChangeForm.value.new) {
     ElMessage.error('请输入新密码')
     return
   }
-  if (passwordChangeForm.value.old !== passwordChangeForm.value.confirm) {
+  if (passwordChangeForm.value.new !== passwordChangeForm.value.confirm) {
     ElMessage.error('两次密码不一致')
     return
   }
   const data = {
-    new_password: passwordChangeForm.value.new,
     old_password: passwordChangeForm.value.old,
+    new_password: passwordChangeForm.value.new,
     confirm_password: passwordChangeForm.value.confirm
   }
   const res = await usePasswordChangeApi(data)
@@ -222,10 +226,10 @@ const handleSearchInput = (val: string) => {
   >
     <el-form :model="passwordChangeForm">
       <el-form-item label="旧密码" label-width="100px">
-        <el-input v-model="passwordChangeForm.new" show-password autocomplete="off" />
+        <el-input v-model="passwordChangeForm.old" show-password autocomplete="off" />
       </el-form-item>
       <el-form-item label="新密码" label-width="100px">
-        <el-input v-model="passwordChangeForm.old" show-password autocomplete="off" />
+        <el-input v-model="passwordChangeForm.new" show-password autocomplete="off" />
       </el-form-item>
       <el-form-item label="确认密码" label-width="100px">
         <el-input v-model="passwordChangeForm.confirm" show-password autocomplete="off" />
