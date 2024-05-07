@@ -6,6 +6,10 @@
   padding: 0;
 }
 
+::selection {
+  background: var(--color-primary-hover);
+}
+
 a,
 .green {
   text-decoration: none;

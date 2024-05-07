@@ -32,8 +32,8 @@ export default defineConfig(({ mode }) => ({
     // 在 proxy 中配置的 代理前缀， mock-dev-server 才会拦截并 mock
     proxy: {
       '^/api': {
-        // target: 'http://example.com'
-        target: ''
+        target: 'http://121.41.53.228:8000/'
+        // target: ''
       }
     }
   }

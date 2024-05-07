@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { EventStreamContentType, fetchEventSource } from '@microsoft/fetch-event-source'
 import dayjs from 'dayjs'
 import qs from 'qs'
 import { ElMessage } from 'element-plus'
@@ -17,6 +18,8 @@ import {
   type SubmitMessageParams,
   type UploadFileItem
 } from '@/interface/chat'
+import { FatalError, RetriableError } from '@/utils/error'
+import { useUserStore } from '@/stores/user'
 import ScenesChoice from './ScenesChoice.vue'
 import UploadTemplate from './UploadTemplate.vue'
 import UploadReference from './UploadReference.vue'
@@ -24,6 +27,8 @@ import UploadReference from './UploadReference.vue'
 import 'highlight.js/styles/monokai.css'
 
 const plugins = [highlight]
+
+const userStore = useUserStore()
 
 const props = defineProps<{
   curSessionId?: string
@@ -87,50 +92,107 @@ const handleDeleteUploadFile = (index: number, type: UploadType) => {
 }
 
 const listenerNewMessage = async (sessionId: string, data: SubmitMessageParams) => {
-  const str = qs.stringify(data)
-  console.log('str', str)
-  if (window.EventSource) {
-    const eventSource = new EventSource(`/api/chats/${sessionId}/completion`)
+  console.log('listenerNewMessage data', data)
 
-    eventSource.onopen = () => {
-      console.log('连接建立')
-      chatDetail.value?.conversations?.push({
-        id: Number(new Date()),
-        message: newContent.value,
-        role: Role.USER,
-        date: Number(new Date())
-      })
-    }
+  const url = `/api/chats/sessions/completion/${sessionId}/`
+  // config.headers.authorization = 'Bearer  ' + userStore.token
 
-    eventSource.onmessage = (event: MessageEvent<string>) => {
-      try {
-        console.log('收到消息: ', event.data)
-        const msgData = JSON.parse(event.data) as ChatMessageRes
-        const msg = msgData.delta.message
-        if (chatDetail.value?.conversations?.length) {
-          const lastData = chatDetail.value.conversations[chatDetail.value.conversations.length - 1]
-          msgData.id && (lastData.id = msgData.id)
-          msg && (lastData.message += msg)
-        }
-      } catch (error) {
-        console.log(' parse error:', error)
+  let eventSource = fetchEventSource(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      authorization: `Bearer  ${userStore.token}`
+    },
+    body: JSON.stringify(data),
+    async onopen(response) {
+      if (response.ok && response.headers.get('content-type') === EventStreamContentType) {
+        console.log('连接建立')
+        chatDetail.value?.conversations?.push({
+          id: Number(new Date()),
+          message: newContent.value,
+          role: Role.USER,
+          date: Number(new Date())
+        })
+        return
+      } else if (response.status >= 400 && response.status < 500 && response.status !== 429) {
+        throw new FatalError('链接错误')
+      } else {
+        throw new RetriableError('error')
       }
+    },
+    onmessage(msg) {
+      if (msg.event === 'FatalError') {
+        throw new Error(msg.data)
+      }
+      console.info('msg.data', msg.data)
+      const msgData = JSON.parse(msg.data) as ChatMessageRes
+      console.log('收到消息: msgData', msgData)
+      const message = msgData?.delta?.message
+      if (chatDetail.value?.conversations?.length) {
+        const lastData = chatDetail.value.conversations[chatDetail.value.conversations.length - 1]
+        msgData.id && (lastData.id = msgData?.id)
+        message && (lastData.message += message)
+      }
+    },
+    onclose() {
+      // if the server closes the connection unexpectedly, retry:
+      throw new RetriableError()
+    },
+    onerror(err) {
+      if (err instanceof FatalError) {
+        throw err // rethrow to stop the operation
+      } else {
+        // do nothing to automatically retry. You can also
+        // return a specific retry interval here.
+      }
+      console.log('err')
     }
+  })
 
-    eventSource.onerror = (e) => {
-      console.log('连接发生错误', e)
-      ElMessage({
-        message: '连接发生错误',
-        type: 'error'
-      })
-      eventSource.close()
-    }
-    onBeforeUnmount(() => {
-      eventSource.close()
-    })
-  } else {
-    console.error('浏览器不支持')
-  }
+  eventSource
+
+  // if (window.EventSource) {
+  //   const eventSource = new EventSource(`/api/chats/sessions/completion/${sessionId}/`)
+
+  //   eventSource.onopen = () => {
+  //     console.log('连接建立')
+  //     chatDetail.value?.conversations?.push({
+  //       id: Number(new Date()),
+  //       message: newContent.value,
+  //       role: Role.USER,
+  //       date: Number(new Date())
+  //     })
+  //   }
+
+  //   eventSource.onmessage = (event: MessageEvent<string>) => {
+  //     try {
+  //       console.log('收到消息: ', event.data)
+  //       const msgData = JSON.parse(event.data) as ChatMessageRes
+  //       const msg = msgData.delta.message
+  //       if (chatDetail.value?.conversations?.length) {
+  //         const lastData = chatDetail.value.conversations[chatDetail.value.conversations.length - 1]
+  //         msgData.id && (lastData.id = msgData.id)
+  //         msg && (lastData.message += msg)
+  //       }
+  //     } catch (error) {
+  //       console.log(' parse error:', error)
+  //     }
+  //   }
+
+  //   eventSource.onerror = (e) => {
+  //     console.log('连接发生错误', e)
+  //     ElMessage({
+  //       message: '连接发生错误',
+  //       type: 'error'
+  //     })
+  //     eventSource.close()
+  //   }
+  //   onBeforeUnmount(() => {
+  //     eventSource.close()
+  //   })
+  // } else {
+  //   console.error('浏览器不支持')
+  // }
 }
 
 const submitNewMessage = async () => {
