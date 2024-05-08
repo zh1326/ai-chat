@@ -39,7 +39,7 @@ const handleExceed: UploadProps['onExceed'] = () => {
     :action="`${host}/api/chats/files/`"
     :name="'file'"
     :data="{ purpose: 'template' }"
-    :headers="{ token: userStore.token || '' }"
+    :headers="{ authorization: `Bearer  ${userStore.token || ''}` }"
     multiple
     :limit="MAX_LIMIT"
     :on-exceed="handleExceed"

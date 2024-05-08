@@ -77,7 +77,7 @@ const handleExceed: UploadProps['onExceed'] = () => {
       :action="`${host}/api/chats/files/`"
       :name="'file'"
       :data="{ purpose: 'reference' }"
-      :headers="{ token: userStore.token || '' }"
+      :headers="{ authorization: `Bearer  ${userStore.token || ''}` }"
       :on-exceed="handleExceed"
       :on-success="handleSuccess"
       :on-change="handleChange"

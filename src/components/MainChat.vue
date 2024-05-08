@@ -9,6 +9,7 @@ import useClipboard from 'vue-clipboard3'
 import VueMarkdown from 'vue-markdown-render'
 import highlight from 'markdown-it-highlightjs'
 import { SceneType, type SceneItem } from '@/interface/scene'
+import { host } from '@/utils/request'
 import {
   Role,
   UploadType,
@@ -18,7 +19,6 @@ import {
   type SubmitMessageParams,
   type UploadFileItem
 } from '@/interface/chat'
-import { FatalError, RetriableError } from '@/utils/error'
 import { useUserStore } from '@/stores/user'
 import ScenesChoice from './ScenesChoice.vue'
 import UploadTemplate from './UploadTemplate.vue'
@@ -91,108 +91,84 @@ const handleDeleteUploadFile = (index: number, type: UploadType) => {
   }
 }
 
-const listenerNewMessage = async (sessionId: string, data: SubmitMessageParams) => {
-  console.log('listenerNewMessage data', data)
+// 使用 TextDecoder 来逐步解码流中的文本
+const decoder = new TextDecoder()
 
+// 递归函数来读取数据
+const read = (reader: ReadableStreamDefaultReader<Uint8Array>) => {
+  console.log('reading')
+  reader
+    .read()
+    .then(({ done, value }) => {
+      if (done) {
+        console.log('Stream complete')
+        return
+      }
+
+      // 将 Uint8Array 编码为字符串
+      const str = decoder.decode(value, { stream: true })
+      console.log(typeof str)
+      console.log(str)
+
+      try {
+        const msgData = JSON.parse(str) as ChatMessageRes
+        if (msgData) {
+          const message = msgData?.delta?.message
+          const conversations = chatDetail.value?.conversations
+          if (conversations && conversations.length) {
+            const lastData = conversations[conversations.length - 1]
+            msgData.id && (lastData.id = msgData?.id)
+            message && (lastData.message += message)
+          }
+        }
+      } catch (error) {
+        console.error('error: ', error)
+      }
+
+      // 递归调用读取下一部分数据
+      read(reader)
+    })
+    .catch((error) => {
+      console.error('Stream reading error:', error)
+    })
+}
+
+const fetchStream = async (sessionId: string, data: SubmitMessageParams) => {
   const url = `/api/chats/sessions/completion/${sessionId}/`
-  // config.headers.authorization = 'Bearer  ' + userStore.token
-
-  let eventSource = fetchEventSource(url, {
+  // const url = `${host}/api/stream/test/`
+  const options = {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      authorization: `Bearer  ${userStore.token}`
+      authorization: `Bearer  ${userStore.token || ''}`
     },
-    body: JSON.stringify(data),
-    async onopen(response) {
-      if (response.ok && response.headers.get('content-type') === EventStreamContentType) {
-        console.log('连接建立')
-        chatDetail.value?.conversations?.push({
-          id: Number(new Date()),
-          message: newContent.value,
-          role: Role.USER,
-          date: Number(new Date())
-        })
-        return
-      } else if (response.status >= 400 && response.status < 500 && response.status !== 429) {
-        throw new FatalError('链接错误')
-      } else {
-        throw new RetriableError('error')
+    body: JSON.stringify(data)
+  }
+
+  window
+    .fetch(url, options)
+    .then((response) => {
+      if (response?.body) {
+        // 获取 ReadableStream 对象
+        const reader = response.body.getReader()
+
+        const conversations = chatDetail.value?.conversations
+        if (conversations) {
+          conversations.push({
+            id: Number(new Date()),
+            message: '',
+            role: Role.ASSISTANT,
+            date: Number(new Date())
+          })
+        }
+
+        // 开始读取流
+        read(reader)
       }
-    },
-    onmessage(msg) {
-      if (msg.event === 'FatalError') {
-        throw new Error(msg.data)
-      }
-      console.info('msg.data', msg.data)
-      const msgData = JSON.parse(msg.data) as ChatMessageRes
-      console.log('收到消息: msgData', msgData)
-      const message = msgData?.delta?.message
-      if (chatDetail.value?.conversations?.length) {
-        const lastData = chatDetail.value.conversations[chatDetail.value.conversations.length - 1]
-        msgData.id && (lastData.id = msgData?.id)
-        message && (lastData.message += message)
-      }
-    },
-    onclose() {
-      // if the server closes the connection unexpectedly, retry:
-      throw new RetriableError()
-    },
-    onerror(err) {
-      if (err instanceof FatalError) {
-        throw err // rethrow to stop the operation
-      } else {
-        // do nothing to automatically retry. You can also
-        // return a specific retry interval here.
-      }
-      console.log('err')
-    }
-  })
-
-  eventSource
-
-  // if (window.EventSource) {
-  //   const eventSource = new EventSource(`/api/chats/sessions/completion/${sessionId}/`)
-
-  //   eventSource.onopen = () => {
-  //     console.log('连接建立')
-  //     chatDetail.value?.conversations?.push({
-  //       id: Number(new Date()),
-  //       message: newContent.value,
-  //       role: Role.USER,
-  //       date: Number(new Date())
-  //     })
-  //   }
-
-  //   eventSource.onmessage = (event: MessageEvent<string>) => {
-  //     try {
-  //       console.log('收到消息: ', event.data)
-  //       const msgData = JSON.parse(event.data) as ChatMessageRes
-  //       const msg = msgData.delta.message
-  //       if (chatDetail.value?.conversations?.length) {
-  //         const lastData = chatDetail.value.conversations[chatDetail.value.conversations.length - 1]
-  //         msgData.id && (lastData.id = msgData.id)
-  //         msg && (lastData.message += msg)
-  //       }
-  //     } catch (error) {
-  //       console.log(' parse error:', error)
-  //     }
-  //   }
-
-  //   eventSource.onerror = (e) => {
-  //     console.log('连接发生错误', e)
-  //     ElMessage({
-  //       message: '连接发生错误',
-  //       type: 'error'
-  //     })
-  //     eventSource.close()
-  //   }
-  //   onBeforeUnmount(() => {
-  //     eventSource.close()
-  //   })
-  // } else {
-  //   console.error('浏览器不支持')
-  // }
+    })
+    .catch((error) => {
+      console.error('Fetch error:', error)
+    })
 }
 
 const submitNewMessage = async () => {
@@ -219,7 +195,7 @@ const submitNewMessage = async () => {
   }
   const sessionId = chatDetail.value?.session_id
   if (sessionId) {
-    listenerNewMessage(sessionId, data)
+    fetchStream(sessionId, data)
     newContent.value = ''
   }
 }
