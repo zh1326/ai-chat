@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { EventStreamContentType, fetchEventSource } from '@microsoft/fetch-event-source'
+import { onMounted, ref, watch } from 'vue'
 import dayjs from 'dayjs'
-import qs from 'qs'
 import { ElMessage } from 'element-plus'
 import { DocumentCopy, Link, Document, Files, Promotion, Close } from '@element-plus/icons-vue'
 import useClipboard from 'vue-clipboard3'
@@ -35,6 +33,7 @@ const props = defineProps<{
   sceneList?: SceneItem[]
   getNewChat: (sceneId: number) => void
   queryChatDetail: (id: string) => Promise<ChatItem>
+  queryChatList: (sessionId: string, showLoading?: boolean) => Promise<void>
   ratingConversation: (convId: number, like: boolean) => void
 }>()
 
@@ -107,9 +106,6 @@ const read = (reader: ReadableStreamDefaultReader<Uint8Array>) => {
 
       // 将 Uint8Array 编码为字符串
       const str = decoder.decode(value, { stream: true })
-      console.log(typeof str)
-      console.log(str)
-
       try {
         const msgData = JSON.parse(str) as ChatMessageRes
         if (msgData) {
@@ -163,6 +159,11 @@ const fetchStream = async (sessionId: string, data: SubmitMessageParams) => {
 
         // 开始读取流
         read(reader)
+
+        const convLength = chatDetail.value?.conversations?.length || 0
+        if (convLength <= 2 && props.curSessionId) {
+          props.queryChatList(props.curSessionId, false)
+        }
       }
     })
     .catch((error) => {
@@ -240,10 +241,7 @@ watch(
               <div class="content-wrap markdown-body" style="font-size: 16px">
                 <vue-markdown :source="item.message" :plugins="plugins" />
               </div>
-              <div
-                class="action"
-                v-if="item.role !== Role.USER"
-              >
+              <div class="action" v-if="item.role !== Role.USER">
                 <div class="left-action">
                   <div class="icon like" @click="props.ratingConversation(item.id, true)">喜欢</div>
                   <div class="icon dislike" @click="props.ratingConversation(item.id, false)">

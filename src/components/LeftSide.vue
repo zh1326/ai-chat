@@ -28,7 +28,7 @@ const props = defineProps<{
   curSessionId?: string
   removeChat: (sessionId: string) => Promise<string>
   searchChatList: (q: string) => void
-  renameChat: (sessionId: string, name: string) => Promise<string>
+  renameChat: (sessionId: string, name: string) => Promise<boolean>
 }>()
 const emit = defineEmits<{
   handleSessionClick: [id: string]
@@ -157,7 +157,7 @@ const handleSearchInput = (val: string) => {
       <div
         v-for="item in props.chatList"
         :key="item.session_id"
-        :class="`item ${props.curSessionId === item.session_id ? 'active' : ''}`"
+        :class="`item ${String(props.curSessionId) === String(item.session_id) ? 'active' : ''}`"
         @click="emit('handleSessionClick', item.session_id)"
       >
         <el-icon><ChatLineRound /></el-icon>

@@ -43,8 +43,8 @@ const handleSessionClick = (id: string) => {
   router.push({ path: '/chat', query: { id } })
 }
 
-const queryChatList = async (sessionId: string) => {
-  loading.value = true
+const queryChatList = async (sessionId: string, showLoading = true) => {
+  showLoading && (loading.value = true)
   const res = await useChatListApi()
   if (res) {
     chatList.value = res
@@ -180,6 +180,7 @@ onUnmounted(() => {
           <main-chat
             :curSessionId="curSessionId"
             :queryChatDetail="queryChatDetail"
+            :queryChatList="queryChatList"
             :getNewChat="getNewChat"
             :ratingConversation="ratingConversation"
             :sceneList="sceneList"
