@@ -74,7 +74,7 @@ const handleExceed: UploadProps['onExceed'] = () => {
       v-model:file-list="fileList"
       :limit="MAX_LIMIT"
       accept=".doc,.docx,.pdf,.txt"
-      :action="`${host}/api/chats/files/`"
+      :action="`${host}/api/files/`"
       :name="'file'"
       :data="{ purpose: 'reference' }"
       :headers="{ authorization: `Bearer  ${userStore.token || ''}` }"

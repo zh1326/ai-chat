@@ -36,7 +36,7 @@ const handleExceed: UploadProps['onExceed'] = () => {
     :show-file-list="false"
     class="upload-btn"
     accept=".doc,.docx,.pdf,.txt"
-    :action="`${host}/api/chats/files/`"
+    :action="`${host}/api/files/`"
     :name="'file'"
     :data="{ purpose: 'template' }"
     :headers="{ authorization: `Bearer  ${userStore.token || ''}` }"

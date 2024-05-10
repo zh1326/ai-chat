@@ -107,7 +107,7 @@ export default defineMock([
     }
   },
   {
-    url: '/api/chats/:sessionId/completion',
+    url: '/api/chats/session/completion/:sessionId/',
     method: 'GET',
     response(req, res, next) {
       const { params } = req
@@ -131,7 +131,7 @@ export default defineMock([
     }
   },
   {
-    url: '/api/chats/files/',
+    url: '/api/files/',
     method: 'POST',
     response(req, res, next) {
       // const { query, body, params, headers } = req

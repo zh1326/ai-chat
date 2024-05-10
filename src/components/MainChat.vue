@@ -134,8 +134,7 @@ const read = (reader: ReadableStreamDefaultReader<Uint8Array>) => {
 }
 
 const fetchStream = async (sessionId: string, data: SubmitMessageParams) => {
-  const url = `/api/chats/sessions/completion/${sessionId}/`
-  // const url = `${host}/api/stream/test/`
+  const url = `${host}/api/chats/sessions/completion/${sessionId}/`
   const options = {
     method: 'POST',
     headers: {
@@ -243,7 +242,7 @@ watch(
               </div>
               <div
                 class="action"
-                v-if="chatDetail.scene_type === SceneType.GENERATION && item.role !== Role.USER"
+                v-if="item.role !== Role.USER"
               >
                 <div class="left-action">
                   <div class="icon like" @click="props.ratingConversation(item.id, true)">喜欢</div>

@@ -40,7 +40,7 @@ export const useConversationsLikeApi = ({
   like: boolean
 }) => {
   const data = { like }
-  return service.put<{ name: string }, string>(
+  return service.patch<{ name: string }, string>(
     `/api/chats/sessions/${sessionId}/conversations/${convId}/`,
     data
   )

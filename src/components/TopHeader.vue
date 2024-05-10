@@ -20,8 +20,8 @@ const handleToggle = (e: MouseEvent) => {
 }
 
 const TitleType = {
-  [SceneType.CONSULTATION]: '咨询类',
-  [SceneType.GENERATION]: '生成类'
+  [SceneType.CONSULTATION]: '咨询',
+  [SceneType.GENERATION]: '文书生成'
 }
 </script>
 
@@ -32,7 +32,7 @@ const TitleType = {
       <h1>
         {{
           props.curSessionId && props.curSession
-            ? `${props.curSession.name} - ${TitleType[props.curSession.scene_type]}`
+            ? `${props.curSession.name} - ${props.curSession.scene_name}`
             : '新对话'
         }}
       </h1>
