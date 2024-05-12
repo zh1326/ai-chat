@@ -5,7 +5,12 @@ import { ElMessage } from 'element-plus'
 import { UploadFilled, Files, Plus, Minus } from '@element-plus/icons-vue'
 import { host } from '@/utils/request'
 import { useUserStore } from '@/stores/user'
-import { UploadType, type HandleUploadReferenceParams, type UploadFileItem } from '@/interface/chat'
+import {
+  UploadType,
+  type FileItem,
+  type HandleUploadReferenceParams,
+  type UploadFileItem
+} from '@/interface/chat'
 
 const userStore = useUserStore()
 
@@ -20,31 +25,31 @@ const emit = defineEmits<{
 const visible = ref(false)
 const fileList = ref<UploadUserFile[]>([]) // upload 组件自身维护的已上传文件列表
 const uploadList = ref<UploadFileItem[]>([]) // 回传给父组件的数据
-const urlListData = reactive({ list: [''] }) // 填写的 URL 列表
+const urlListData = reactive<{ list: FileItem[] }>({ list: [{ url: '' }] }) // 填写的 URL 列表
 const MAX_LIMIT = 2
 
 const handleOk = () => {
-  const idList = uploadList.value.map((item) => item.id || '')
+  const idList = uploadList.value.map((item) => ({ id: item.id, name: item.name }))
   emit('uploadSuccess', { val: idList, type: UploadType.REFERENCE })
 
   emit('uploadSuccess', { val: urlListData.list, type: UploadType.URL })
 
   fileList.value = []
   uploadList.value = []
-  urlListData.list = ['']
+  urlListData.list = [{ url: '' }]
   visible.value = false
 }
 
 const handleIncreaseDecrease = (index: number) => {
   if (index === 0) {
-    urlListData.list.push('')
+    urlListData.list.push({ url: '' })
   } else {
     urlListData.list.splice(index, 1)
   }
 }
 
 const handleSuccess: UploadProps['onSuccess'] = (res) => {
-  uploadList.value.push({ id: res.file_id, type: UploadType.REFERENCE })
+  uploadList.value.push({ id: res.file_id, name: res.file_name, type: UploadType.REFERENCE })
 }
 
 const handleChange: UploadProps['onChange'] = (uploadFile, uploadFiles) => {
@@ -88,7 +93,7 @@ const handleExceed: UploadProps['onExceed'] = () => {
     <el-divider>或</el-divider>
     <div class="url-input-list">
       <div class="url-input" v-for="(item, index) in urlListData.list" :key="index">
-        <el-input v-model="urlListData.list[index]" placeholder="输入参考 URL" />
+        <el-input v-model="urlListData.list[index].url" placeholder="输入参考 URL" />
         <el-button
           plain
           :type="index === 0 ? 'primary' : 'danger'"

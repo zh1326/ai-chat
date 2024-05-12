@@ -5,7 +5,7 @@ import { ElMessage } from 'element-plus'
 import { Document } from '@element-plus/icons-vue'
 import { host } from '@/utils/request'
 import { useUserStore } from '@/stores/user'
-import { UploadType, type HandleUploadTemplateParams } from '@/interface/chat'
+import { UploadType, type HandleUploadTemplateParams, type UploadFileRes } from '@/interface/chat'
 
 const userStore = useUserStore()
 
@@ -20,8 +20,11 @@ const emit = defineEmits<{
 const fileList = ref<UploadUserFile[]>([])
 const MAX_LIMIT = 1
 
-const handleSuccess: UploadProps['onSuccess'] = (res) => {
-  emit('uploadSuccess', { val: res.file_id, type: UploadType.TEMPLATE })
+const handleSuccess: UploadProps['onSuccess'] = (res: UploadFileRes) => {
+  emit('uploadSuccess', {
+    val: { id: res.file_id, name: res.file_name },
+    type: UploadType.TEMPLATE
+  })
   fileList.value = []
 }
 

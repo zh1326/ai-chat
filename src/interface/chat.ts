@@ -57,19 +57,32 @@ export enum UploadType {
 }
 
 export interface UploadFileItem {
-  id?: string
+  id?: number
+  name?: string
   url?: string
   type: UploadType
 }
 
+export interface FileItem {
+  id?: number
+  url?: string
+  name?: string
+}
+
+export interface UploadFileRes {
+  file_id: number
+  file_name: string
+  file_url: string
+}
+
 export interface HandleUploadTemplateParams {
   type: UploadType.TEMPLATE
-  val: string
+  val: FileItem
 }
 
 export interface HandleUploadReferenceParams {
   type: UploadType.REFERENCE | UploadType.URL
-  val: string[]
+  val: FileItem[]
 }
 
 export type HandleUploadParams = HandleUploadTemplateParams | HandleUploadReferenceParams

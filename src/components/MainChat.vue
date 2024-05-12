@@ -69,13 +69,13 @@ const queryChatDetail = async (id?: string) => {
 
 const handleUploadSuccess = ({ type, val }: HandleUploadParams) => {
   if (type === UploadType.TEMPLATE) {
-    const data = { type, id: val }
+    const data = { type, id: val.id, name: val.name }
     uploadFileListTemplate.value = [data]
   } else if (type === UploadType.REFERENCE) {
-    const data: UploadFileItem[] = val.map((item) => ({ id: item, type }))
+    const data: UploadFileItem[] = val.map((item) => ({ id: item.id, name: item.name, type }))
     uploadFileListReference.value = data
   } else if (type === UploadType.URL) {
-    const data: UploadFileItem[] = val.map((item) => ({ url: item, type }))
+    const data: UploadFileItem[] = val.map((item) => ({ id: item.id, url: item.url, type }))
     uploadFileListUrl.value = data
   }
 }
@@ -184,10 +184,10 @@ const submitNewMessage = async () => {
   }
   if (chatDetail.value?.scene_type === SceneType.GENERATION) {
     if (uploadFileListTemplate.value?.[0]) {
-      data.template_file_id = uploadFileListTemplate.value[0].id
+      data.template_file_id = String(uploadFileListTemplate.value[0].id)
     }
     if (uploadFileListReference.value?.length) {
-      data.reference_file_ids = uploadFileListReference.value.map((item) => item.id || '')
+      data.reference_file_ids = uploadFileListReference.value.map((item) => String(item.id) || '')
     }
     if (uploadFileListUrl.value?.length) {
       data.reference_urls = uploadFileListUrl.value.map((item) => item.url || '')
@@ -196,8 +196,15 @@ const submitNewMessage = async () => {
   const sessionId = chatDetail.value?.session_id
   if (sessionId) {
     fetchStream(sessionId, data)
-    newContent.value = ''
+    resetChat()
   }
+}
+
+const resetChat = () => {
+  newContent.value = ''
+  uploadFileListTemplate.value = []
+  uploadFileListReference.value = []
+  uploadFileListUrl.value = []
 }
 
 onMounted(() => {
@@ -209,10 +216,7 @@ watch(
   () => props.curSessionId,
   async (newVal, oldVal) => {
     if (newVal !== oldVal) {
-      newContent.value = ''
-      uploadFileListTemplate.value = []
-      uploadFileListReference.value = []
-      uploadFileListUrl.value = []
+      resetChat()
       queryChatDetail(newVal)
     }
   }
@@ -288,7 +292,7 @@ watch(
           <div class="file-item" v-for="(item, index) in uploadFileListTemplate" :key="item.id">
             <div class="file">
               <el-icon><Document /></el-icon>
-              <div class="name">{{ item.id }}</div>
+              <div class="name">{{ item.name }}</div>
             </div>
             <div class="delete">
               <el-icon @click="() => handleDeleteUploadFile(index, item.type)"><Close /></el-icon>
@@ -298,7 +302,7 @@ watch(
           <div class="file-item" v-for="(item, index) in uploadFileListReference" :key="item.id">
             <div class="file">
               <el-icon><Files /></el-icon>
-              <div class="name">{{ item.id }}</div>
+              <div class="name">{{ item.name }}</div>
             </div>
             <div class="delete">
               <el-icon @click="() => handleDeleteUploadFile(index, item.type)"><Close /></el-icon>
