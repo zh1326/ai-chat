@@ -55,6 +55,13 @@ export const useUserStore = defineStore('userStore', {
       // 移除 token
       this.isLogin = false
       this.setToken(null)
+      this.setUser({
+        userid: '',
+        username: '',
+        email: '',
+        phone: '',
+        last_login_at: 0
+      })
     }
   }
 })
