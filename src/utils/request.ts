@@ -78,10 +78,11 @@ service.interceptors.response.use(
     const curPath = router.currentRoute.value.fullPath
 
     if (response.status === 401) {
+      if (curPath === LoginPath) {
+        ElMessage.error('用户名或密码错误')
+        return
+      }
       return handleAuthorized()
-    } else if (curPath === LoginPath && response.status === 422) {
-      ElMessage.error('用户名或密码错误')
-      return
     } else if (response.status === 422) {
       ElMessage.error('出错了，请稍后重试')
       return
