@@ -130,3 +130,12 @@ export interface ChatMessageRes {
   id: number
   delta: StreamContent
 }
+
+export enum AnswerStatus {
+  /** 默认状态 */
+  DEFAULT = -1,
+  /** 等待回答返回 */
+  WAITING_RESPONSE = 1,
+  /** 正在回答 */
+  ANSWERING = 2
+}

@@ -9,6 +9,7 @@ import highlight from 'markdown-it-highlightjs'
 import { SceneType, type SceneItem } from '@/interface/scene'
 import { host } from '@/utils/request'
 import {
+  AnswerStatus,
   Role,
   UploadType,
   type ChatItem,
@@ -37,6 +38,9 @@ const props = defineProps<{
   ratingConversation: (convId: number, like: boolean) => void
 }>()
 
+const answerStatus = ref(AnswerStatus.DEFAULT)
+const pageScrollTimer = ref<number>()
+// const pageRef = ref<HTMLDivElement | null>(null)
 const newContent = ref('')
 const chatDetail = ref<ChatItem>()
 const uploadFileListTemplate = ref<UploadFileItem[]>([])
@@ -44,6 +48,13 @@ const uploadFileListReference = ref<UploadFileItem[]>([])
 const uploadFileListUrl = ref<UploadFileItem[]>([])
 
 const { toClipboard } = useClipboard()
+
+const scrollBottom = () => {
+  const pageContent = document.querySelector<HTMLElement>('#chat-content-container')
+  if (pageContent) {
+    pageContent.scrollTop = pageContent.scrollHeight
+  }
+}
 
 const handleCopy = async (msg: string) => {
   try {
@@ -101,6 +112,7 @@ const read = (reader: ReadableStreamDefaultReader<Uint8Array>) => {
     .then(({ done, value }) => {
       if (done) {
         console.log('Stream complete')
+        answerStatus.value = AnswerStatus.DEFAULT
         return
       }
 
@@ -140,6 +152,11 @@ const fetchStream = async (sessionId: string, data: SubmitMessageParams) => {
     body: JSON.stringify(data)
   }
 
+  answerStatus.value = AnswerStatus.WAITING_RESPONSE
+  setTimeout(() => {
+    scrollBottom()
+  }, 100)
+
   window
     .fetch(url, options)
     .then((response) => {
@@ -156,6 +173,8 @@ const fetchStream = async (sessionId: string, data: SubmitMessageParams) => {
             date: Number(new Date())
           })
         }
+
+        answerStatus.value = AnswerStatus.ANSWERING
 
         // 开始读取流
         read(reader)
@@ -221,6 +240,18 @@ watch(
     }
   }
 )
+
+watch(answerStatus, (newValue) => {
+  if (newValue === AnswerStatus.ANSWERING) {
+    pageScrollTimer.value = setInterval(() => {
+      scrollBottom()
+    }, 1000)
+  } else if (newValue === AnswerStatus.DEFAULT) {
+    if (pageScrollTimer.value) {
+      clearInterval(pageScrollTimer.value)
+    }
+  }
+})
 </script>
 
 <template>

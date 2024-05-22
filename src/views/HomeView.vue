@@ -176,7 +176,7 @@ onUnmounted(() => {
         <el-header>
           <top-header :curSessionId="curSessionId" :curSession="curSession" />
         </el-header>
-        <el-main>
+        <el-main id="chat-content-container">
           <main-chat
             :curSessionId="curSessionId"
             :queryChatDetail="queryChatDetail"
