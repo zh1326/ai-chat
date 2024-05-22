@@ -10,7 +10,7 @@ export const host = import.meta.env.VITE_APP_API_HOST
 // axios 实例
 const service = axios.create({
   baseURL: host,
-  timeout: 60000,
+  timeout: 300000,
   headers: { 'Content-Type': 'application/json;charset=UTF-8' }
 })
 
@@ -75,13 +75,16 @@ service.interceptors.response.use(
   },
   (error) => {
     const { response } = error
-    const curPath = router.currentRoute.value.fullPath
+    const curPath = router.currentRoute.value.path
 
     if (response.status === 401) {
       if (curPath === LoginPath) {
         ElMessage.error('用户名或密码错误')
         return
       }
+      const userStore = useUserStore()
+      userStore?.clearToken()
+      console.log('clear expired token')
       return handleAuthorized()
     } else if (response.status === 422) {
       ElMessage.error('出错了，请稍后重试')
@@ -102,6 +105,7 @@ const handleAuthorized = () => {
   }).then(() => {
     const userStore = useUserStore()
     userStore?.clearToken()
+    console.log('clear expired token')
     router.push({
       path: LoginPath,
       query: { returnUrl: router.currentRoute.value.fullPath }
