@@ -152,6 +152,12 @@
   left: 0;
   right: 0;
   padding: 16px 20px;
+  .stop-fetch-wrap {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translate(-50%, -30px);
+  }
   .chat-input {
     background: #fff;
     backdrop-filter: blur(8px);

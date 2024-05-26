@@ -2,7 +2,15 @@
 import { onMounted, ref, watch } from 'vue'
 import dayjs from 'dayjs'
 import { ElMessage } from 'element-plus'
-import { DocumentCopy, Link, Document, Files, Promotion, Close } from '@element-plus/icons-vue'
+import {
+  DocumentCopy,
+  Link,
+  Document,
+  Files,
+  Promotion,
+  Close,
+  SwitchButton
+} from '@element-plus/icons-vue'
 import useClipboard from 'vue-clipboard3'
 import VueMarkdown from 'vue-markdown-render'
 import highlight from 'markdown-it-highlightjs'
@@ -46,6 +54,7 @@ const chatDetail = ref<ChatItem>()
 const uploadFileListTemplate = ref<UploadFileItem[]>([])
 const uploadFileListReference = ref<UploadFileItem[]>([])
 const uploadFileListUrl = ref<UploadFileItem[]>([])
+const fetchControllerRef = ref<AbortController>()
 
 const { toClipboard } = useClipboard()
 
@@ -142,8 +151,14 @@ const read = (reader: ReadableStreamDefaultReader<Uint8Array>) => {
 }
 
 const fetchStream = async (sessionId: string, data: SubmitMessageParams) => {
+  const controller = new AbortController() // 控制器用于中断请求
+  const signal = controller.signal // 中断信号
+
+  fetchControllerRef.value = controller
+
   const url = `${host}/api/chats/sessions/completion/${sessionId}/`
   const options = {
+    signal,
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -188,6 +203,11 @@ const fetchStream = async (sessionId: string, data: SubmitMessageParams) => {
     .catch((error) => {
       console.error('Fetch error:', error)
     })
+}
+
+const stopStream = () => {
+  fetchControllerRef.value?.abort()
+  answerStatus.value = AnswerStatus.DEFAULT
 }
 
 const submitNewMessage = async () => {
@@ -298,6 +318,11 @@ watch(answerStatus, (newValue) => {
 
     <!-- 底部输入框 -->
     <div class="chat-input-container">
+      <div v-if="answerStatus === AnswerStatus.ANSWERING" class="stop-fetch-wrap">
+        <el-button :icon="SwitchButton" type="danger" plain round @click="stopStream">
+          停止响应
+        </el-button>
+      </div>
       <div class="chat-input">
         <div class="textarea-wrap">
           <textarea v-model="newContent" class="textarea" placeholder="问我任何问题"></textarea>
@@ -308,7 +333,13 @@ watch(answerStatus, (newValue) => {
             <upload-reference @upload-success="handleUploadSuccess" />
           </div>
           <div class="send">
-            <el-button type="primary" :icon="Promotion" @click="submitNewMessage">发送</el-button>
+            <el-button
+              type="primary"
+              :icon="Promotion"
+              @click="submitNewMessage"
+              :disabled="answerStatus !== AnswerStatus.DEFAULT"
+              >发送</el-button
+            >
           </div>
         </div>
         <div
