@@ -325,7 +325,7 @@ watch(answerStatus, (newValue) => {
       </div>
       <div class="chat-input">
         <div class="textarea-wrap">
-          <textarea v-model="newContent" class="textarea" placeholder="问我任何问题"></textarea>
+          <textarea v-model="newContent" class="textarea" @keydown.shift.enter="submitNewMessage" placeholder="问我任何问题, shift+回车 发送"></textarea>
         </div>
         <div class="action">
           <div class="advanced" v-if="chatDetail.scene_type === SceneType.GENERATION">
