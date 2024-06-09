@@ -127,20 +127,23 @@ const read = (reader: ReadableStreamDefaultReader<Uint8Array>) => {
 
       // 将 Uint8Array 编码为字符串
       const str = decoder.decode(value, { stream: true })
-      try {
-        const msgData = JSON.parse(str) as ChatMessageRes
-        if (msgData) {
-          const message = msgData?.delta?.message
-          const conversations = chatDetail.value?.conversations
-          if (conversations && conversations.length) {
-            const lastData = conversations[conversations.length - 1]
-            msgData.id && (lastData.id = msgData?.id)
-            message && (lastData.message += message)
+      const jsonStrings = str.match(/({.*?}(?=\{)|{.*})/g);
+      jsonStrings.forEach(jsonStr => {
+        try {
+          const msgData = JSON.parse(jsonStr) as ChatMessageRes
+          if (msgData) {
+            const message = msgData?.delta?.message
+            const conversations = chatDetail.value?.conversations
+            if (conversations && conversations.length) {
+              const lastData = conversations[conversations.length - 1]
+              msgData.id && (lastData.id = msgData?.id)
+              message && (lastData.message += message)
+            }
           }
+        } catch (error) {
+          console.error('error: ', error)
         }
-      } catch (error) {
-        console.error('error: ', error)
-      }
+      })
 
       // 递归调用读取下一部分数据
       read(reader)

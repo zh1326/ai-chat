@@ -78,7 +78,7 @@ const handleExceed: UploadProps['onExceed'] = () => {
       drag
       v-model:file-list="fileList"
       :limit="MAX_LIMIT"
-      accept=".doc,.docx,.pdf,.txt"
+      accept=".docx,.pdf,.txt"
       :action="`${host}/api/files/`"
       :name="'file'"
       :data="{ purpose: 'reference' }"
@@ -90,6 +90,7 @@ const handleExceed: UploadProps['onExceed'] = () => {
       <el-icon class="el-icon--upload"><upload-filled /></el-icon>
       <div class="el-upload__text">拖动文件到此处或者 <em>点击上传</em></div>
     </el-upload>
+    <!--
     <el-divider>或</el-divider>
     <div class="url-input-list">
       <div class="url-input" v-for="(item, index) in urlListData.list" :key="index">
@@ -103,6 +104,7 @@ const handleExceed: UploadProps['onExceed'] = () => {
         />
       </div>
     </div>
+    -->
     <template #footer>
       <div class="dialog-footer">
         <el-button @click="visible = false">取消</el-button>
