@@ -48,8 +48,6 @@ const queryChatList = async (sessionId: string, showLoading = true) => {
   const res = await useChatListApi()
   if (res) {
     chatList.value = res
-    const cur = chatList.value.find((item) => item.session_id === sessionId)
-    curSession.value = cur
   }
   loading.value = false
 }
@@ -64,6 +62,7 @@ const searchChatList = async (q: string) => {
 const queryChatDetail = async (sessionId: string) => {
   loading.value = true
   const res = await useChatDetailApi(sessionId)
+  curSession.value = res
   loading.value = false
   return res
 }

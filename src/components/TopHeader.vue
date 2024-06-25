@@ -29,7 +29,7 @@ const TitleType = {
   <div class="header-wrap">
     <el-button :icon="globalStore.sidebarOpened ? Fold : Expand" @click="handleToggle" />
     <div class="title">
-      <h1>
+      <h1 style="max-width: 95%">
         {{
           props.curSessionId && props.curSession
             ? `${props.curSession.name} - ${props.curSession.scene_name}`
