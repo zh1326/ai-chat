@@ -5,6 +5,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   Search,
   ChatLineRound,
+  ChatLineSquare,
   Edit,
   Delete,
   SwitchButton,
@@ -14,6 +15,7 @@ import {
 } from '@element-plus/icons-vue'
 import Config from '@/config'
 import type { ChatItem } from '@/interface/chat'
+import { SceneType } from '@/interface/scene'
 import { useUserStore } from '@/stores/user'
 import { usePasswordChangeApi } from '@/api/user'
 
@@ -160,7 +162,8 @@ const handleSearchInput = (val: string) => {
         :class="`item ${String(props.curSessionId) === String(item.session_id) ? 'active' : ''}`"
         @click="emit('handleSessionClick', item.session_id)"
       >
-        <el-icon><ChatLineRound /></el-icon>
+        <el-icon v-if="item.scene_type === SceneType.CONSULTATION"><ChatLineRound /></el-icon>
+        <el-icon v-else><ChatLineSquare /></el-icon>
         <div class="title">{{ item.name }}</div>
         <div class="action-wrap">
           <div class="action">

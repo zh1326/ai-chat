@@ -77,7 +77,7 @@ export interface UploadFileRes {
 
 export interface HandleUploadTemplateParams {
   type: UploadType.TEMPLATE
-  val: FileItem
+  val: TemplateItem
 }
 
 export interface HandleUploadReferenceParams {
@@ -114,6 +114,8 @@ export interface SubmitMessageParams {
   message: string
   /** 模板文件id */
   template_file_id?: string
+  /** 模板文件类型 */
+  template_type?: string
   /** 参考文件id列表，最多两个 */
   reference_file_ids?: string[]
   /** 参考资料url列表，最多两个 */
@@ -138,4 +140,10 @@ export enum AnswerStatus {
   WAITING_RESPONSE = 1,
   /** 正在回答 */
   ANSWERING = 2
+}
+
+export interface TemplateItem extends Record<string, any> {
+  tid: number;
+  name: string;
+  ttype: string;
 }

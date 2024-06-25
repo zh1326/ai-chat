@@ -24,7 +24,8 @@ import {
   type ChatMessageRes,
   type HandleUploadParams,
   type SubmitMessageParams,
-  type UploadFileItem
+  type UploadFileItem,
+  type TemplateItem
 } from '@/interface/chat'
 import { useUserStore } from '@/stores/user'
 import ScenesChoice from './ScenesChoice.vue'
@@ -47,11 +48,11 @@ const props = defineProps<{
 }>()
 
 const answerStatus = ref(AnswerStatus.DEFAULT)
-const pageScrollTimer = ref<number>()
+const pageScrollTimer = ref<number | null>(null)
 // const pageRef = ref<HTMLDivElement | null>(null)
 const newContent = ref('')
 const chatDetail = ref<ChatItem>()
-const uploadFileListTemplate = ref<UploadFileItem[]>([])
+const uploadFileListTemplate = ref<TemplateItem[]>([])
 const uploadFileListReference = ref<UploadFileItem[]>([])
 const uploadFileListUrl = ref<UploadFileItem[]>([])
 const fetchControllerRef = ref<AbortController>()
@@ -89,7 +90,7 @@ const queryChatDetail = async (id?: string) => {
 
 const handleUploadSuccess = ({ type, val }: HandleUploadParams) => {
   if (type === UploadType.TEMPLATE) {
-    const data = { type, id: val.id, name: val.name }
+    const data = { type, tid: val.tid, name: val.name, ttype: val.ttype }
     uploadFileListTemplate.value = [data]
   } else if (type === UploadType.REFERENCE) {
     const data: UploadFileItem[] = val.map((item) => ({ id: item.id, name: item.name, type }))
@@ -128,22 +129,24 @@ const read = (reader: ReadableStreamDefaultReader<Uint8Array>) => {
       // 将 Uint8Array 编码为字符串
       const str = decoder.decode(value, { stream: true })
       const jsonStrings = str.match(/({.*?}(?=\{)|{.*})/g);
-      jsonStrings.forEach(jsonStr => {
-        try {
-          const msgData = JSON.parse(jsonStr) as ChatMessageRes
-          if (msgData) {
-            const message = msgData?.delta?.message
-            const conversations = chatDetail.value?.conversations
-            if (conversations && conversations.length) {
-              const lastData = conversations[conversations.length - 1]
-              msgData.id && (lastData.id = msgData?.id)
-              message && (lastData.message += message)
+      if (jsonStrings) {
+        jsonStrings.forEach(jsonStr => {
+          try {
+            const msgData = JSON.parse(jsonStr) as ChatMessageRes
+            if (msgData) {
+              const message = msgData?.delta?.message
+              const conversations = chatDetail.value?.conversations
+              if (conversations && conversations.length) {
+                const lastData = conversations[conversations.length - 1]
+                msgData.id && (lastData.id = msgData?.id)
+                message && (lastData.message += message)
+              }
             }
+          } catch (error) {
+            console.error('error: ', error)
           }
-        } catch (error) {
-          console.error('error: ', error)
-        }
-      })
+        })
+      }
 
       // 递归调用读取下一部分数据
       read(reader)
@@ -226,7 +229,8 @@ const submitNewMessage = async () => {
   }
   if (chatDetail.value?.scene_type === SceneType.GENERATION) {
     if (uploadFileListTemplate.value?.[0]) {
-      data.template_file_id = String(uploadFileListTemplate.value[0].id)
+      data.template_file_id = String(uploadFileListTemplate.value[0].tid)
+      data.template_type = uploadFileListTemplate.value[0].ttype
     }
     if (uploadFileListReference.value?.length) {
       data.reference_file_ids = uploadFileListReference.value.map((item) => String(item.id) || '')
@@ -272,6 +276,7 @@ watch(answerStatus, (newValue) => {
   } else if (newValue === AnswerStatus.DEFAULT) {
     if (pageScrollTimer.value) {
       clearInterval(pageScrollTimer.value)
+      pageScrollTimer.value = null;
     }
   }
 })

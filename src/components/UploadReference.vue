@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
+import axios from 'axios';
 import type { UploadProps, UploadUserFile } from 'element-plus'
 import { ElMessage } from 'element-plus'
 import { UploadFilled, Files, Plus, Minus } from '@element-plus/icons-vue'
@@ -26,18 +27,45 @@ const visible = ref(false)
 const fileList = ref<UploadUserFile[]>([]) // upload 组件自身维护的已上传文件列表
 const uploadList = ref<UploadFileItem[]>([]) // 回传给父组件的数据
 const urlListData = reactive<{ list: FileItem[] }>({ list: [{ url: '' }] }) // 填写的 URL 列表
-const MAX_LIMIT = 2
+const MAX_LIMIT = 1
+
+const query = ref('');
+const references = ref([]);
+const referenceFileName = ref('');
+
+const fetchReferences = (queryString: string, callback: (references: FileItem[]) => void) => {
+  axios.get(`${host}/api/references/`, {
+    params: { q: queryString },
+    headers: {
+      'Authorization': `Bearer ${userStore.token}`
+    }
+  }).then(response => {
+    references.value = response.data;
+    callback(references.value);
+  }).catch(error => {
+    console.error(error);
+  });
+};
+
+const handleSelect = (item: any) => {
+  const fileItem = item as FileItem
+  query.value = fileItem.name || '' // 更新输入框的值为选中模板的名称
+  referenceFileName.value = fileItem.name || ''
+  uploadList.value = []
+  uploadList.value.push({ id: fileItem.id, name: fileItem.name, type: UploadType.REFERENCE })
+};
 
 const handleOk = () => {
   const idList = uploadList.value.map((item) => ({ id: item.id, name: item.name }))
   emit('uploadSuccess', { val: idList, type: UploadType.REFERENCE })
 
-  emit('uploadSuccess', { val: urlListData.list, type: UploadType.URL })
+  // emit('uploadSuccess', { val: urlListData.list, type: UploadType.URL })
 
   fileList.value = []
   uploadList.value = []
   urlListData.list = [{ url: '' }]
   visible.value = false
+  referenceFileName.value = ''
 }
 
 const handleIncreaseDecrease = (index: number) => {
@@ -49,6 +77,8 @@ const handleIncreaseDecrease = (index: number) => {
 }
 
 const handleSuccess: UploadProps['onSuccess'] = (res) => {
+  uploadList.value = []
+  referenceFileName.value = res.file_name
   uploadList.value.push({ id: res.file_id, name: res.file_name, type: UploadType.REFERENCE })
 }
 
@@ -62,16 +92,30 @@ const handleExceed: UploadProps['onExceed'] = () => {
 </script>
 
 <template>
-  <el-tooltip content="上传参考，最多两个" placement="top">
+  <el-tooltip content="添加或上传参考文件" placement="top">
     <el-button :icon="Files" circle @click="visible = true" />
   </el-tooltip>
   <el-dialog
     class="upload-dialog"
     v-model="visible"
-    title="上传参考"
+    title="添加或上传参考文件"
     width="500"
     :append-to-body="true"
   >
+    <div class="reference-list">
+      <div class="reference-input">
+        <el-autocomplete
+          style="width: 100%;"
+          v-model="query"
+          :fetch-suggestions="fetchReferences"
+          placeholder="输入关键词搜索已有参考文件并选中添加"
+          @select="handleSelect"
+          :debounce="300"
+          value-key="name"
+        ></el-autocomplete>
+      </div>
+    </div>
+    <el-divider>或上传新参考文件</el-divider>
     <el-upload
       class="upload"
       multiple
@@ -106,6 +150,11 @@ const handleExceed: UploadProps['onExceed'] = () => {
     </div>
     -->
     <template #footer>
+      <el-form>
+        <el-form-item label="已选参考文件：">
+          <label>{{ referenceFileName }}</label>
+        </el-form-item>
+      </el-form>
       <div class="dialog-footer">
         <el-button @click="visible = false">取消</el-button>
         <el-button type="primary" @click="handleOk">确定</el-button>
@@ -115,22 +164,30 @@ const handleExceed: UploadProps['onExceed'] = () => {
 </template>
 
 <style lang="scss" scoped>
-.upload-dialog {
-  .upload {
-    :deep(.el-upload-dragger) {
-      padding: 10px;
-    }
-    .el-icon--upload {
-      font-size: 50px;
-      margin-bottom: 8px;
+  .upload-dialog {
+    .upload {
+      :deep(.el-upload-dragger) {
+        padding: 10px;
+      }
+      .el-icon--upload {
+        font-size: 50px;
+        margin-bottom: 8px;
+      }
     }
   }
-}
-.url-input-list {
-  .url-input {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 12px;
+  .url-input-list {
+    .url-input {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
   }
-}
+
+  .reference-list {
+    .template-input {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+  }
 </style>
