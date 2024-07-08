@@ -1,6 +1,10 @@
 <script setup lang="ts">
-import { ChatDotSquare } from '@element-plus/icons-vue'
+import {
+  ChatLineRound,
+  ChatLineSquare,
+} from '@element-plus/icons-vue'
 import type { SceneItem } from '@/interface/scene'
+import { SceneType } from '@/interface/scene'
 
 const props = defineProps<{
   sceneList?: SceneItem[]
@@ -27,7 +31,8 @@ const handleClick = (sceneId: number) => {
         @click="handleClick(item.id)"
       >
         <div class="icon">
-          <el-icon><ChatDotSquare /></el-icon>
+          <el-icon v-if="item.stype === SceneType.CONSULTATION"><ChatLineRound /></el-icon>
+          <el-icon v-else><ChatLineSquare /></el-icon>
         </div>
         <div class="body">
           <div class="title">{{ item.name }}</div>

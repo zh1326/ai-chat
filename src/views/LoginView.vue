@@ -1,6 +1,10 @@
 <template>
   <div class="login-container">
-    <div>
+    <div class="login-logo">
+      <!-- 添加 logo 图片 -->
+      <img :src="Config.LoginLogoH" alt="Logo" />
+    </div>
+    <div class="login-form">
       <el-form ref="loginFormRef" :model="loginForm" :rules="loginRules" @keyup.enter="onLogin">
         <el-form-item prop="username">
           <el-input
@@ -17,8 +21,8 @@
             placeholder="输入密码"
           ></el-input>
         </el-form-item>
-        <el-form-item class="login-button">
-          <el-button type="primary" @click="onLogin()">登录</el-button>
+        <el-form-item>
+          <el-button class="login-button" type="primary" @click="onLogin()">登录</el-button>
         </el-form-item>
       </el-form>
     </div>
@@ -30,6 +34,7 @@ import { ref, reactive } from 'vue'
 import { User, Lock } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 import { useRouter } from 'vue-router'
+import Config from '@/config'
 
 const userStore = useUserStore()
 const router = useRouter()
@@ -75,8 +80,26 @@ const onLogin = () => {
 <style lang="scss" scoped>
 .login-container {
   display: flex;
-  justify-content: space-evenly;
+  justify-content: center;
   align-items: center;
   height: 100vh;
+  flex-direction: column;
+}
+
+.login-logo {
+  margin-bottom: 50px;
+}
+
+.login-logo img {
+  width: 200px; /* 根据需要调整 */
+  height: auto; /* 保持图片比例 */
+}
+
+.login-form {
+  width: 250px;
+}
+
+.login-button {
+  width: 250px;
 }
 </style>
